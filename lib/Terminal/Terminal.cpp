@@ -31,7 +31,7 @@ IPAddress Terminal::terminalDNSLookup(const char *DOMAIN, IPAddress IP, bool DEV
         return IP;
     }
     else
-        return {0,0,0,0};
+        return IPAddress(0,0,0,0);
 }
 void Terminal::foo() {
     Serial.print("aaa");

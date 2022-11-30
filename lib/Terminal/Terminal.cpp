@@ -3,9 +3,7 @@
 //
 
 #include <Terminal.h>
-#include <EthernetUDP.h>
 #include <Dns.h>
-#include <Arduino.h>
 
 IPAddress Terminal::terminalDNSLookup(const char *DOMAIN, IPAddress IP, bool DEVELOPMENT_MODE) {
     DNSClient DNS_CLIENT;
@@ -15,7 +13,7 @@ IPAddress Terminal::terminalDNSLookup(const char *DOMAIN, IPAddress IP, bool DEV
     if (DEVELOPMENT_MODE) {
         Serial.println("[?] Trying to find terminal IP via DNS...");
         if (DNS_CLIENT.getHostByName(DOMAIN, IP) == 1) {
-            Serial.print("[!] Terminaal IP: ");
+            Serial.print("[!] Terminal IP: ");
             Serial.print(IP);
             Serial.print(" (");
             Serial.print(DOMAIN);
@@ -32,7 +30,4 @@ IPAddress Terminal::terminalDNSLookup(const char *DOMAIN, IPAddress IP, bool DEV
     }
     else
         return IPAddress(0,0,0,0);
-}
-void Terminal::foo() {
-    Serial.print("aaa");
 }

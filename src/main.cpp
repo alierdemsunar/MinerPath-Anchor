@@ -1,11 +1,10 @@
 #include <Arduino.h>
 #include <EthernetUDP.h>
-#include <Dns.h>
 #include <Terminal.h>
 //***UNIQUE PARAMETERS***//
 char TERMINAL_DOMAIN[32] = "terminal.minerpath.local"; // Terminal domain address
 byte ANCHOR_MAC_ADDRESS[6] = {0x90, 0x92, 0xBE, 0xEF, 0xFE, 0xEF}; // Anchor MAC address
-const boolean DEVELOPMENT_MODE = false; // Development mode switch
+const boolean DEVELOPMENT_MODE = true; // Development mode switch
 
 //***ANCHOR PARAMETERS***//
 IPAddress TERMINAL_IP(0, 0, 0, 0); // Terminal IP address

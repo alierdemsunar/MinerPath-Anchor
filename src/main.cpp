@@ -5,7 +5,6 @@
 
 //***UNIQUE PARAMETERS***//
 byte ANCHOR_MAC_ADDRESS[6] = {0x90, 0x92, 0xBE, 0xEF, 0xFE, 0xEF}; // Anchor MAC address
-const boolean DEVELOPMENT_MODE = true; // Development mode switch
 
 //***COMMON PARAMETERS***//
 const boolean DEVELOPMENT_MODE = false; // Development mode switch
@@ -25,8 +24,6 @@ void setup() {
 }
 
 void loop() {
-    UDP_PACKET.beginPacket(TERMINAL_IP, TERMINAL_PORT);
-    UDP_PACKET.write("Anchor IP: ");UDP_PACKET.write(EthernetClass::localIP());
-    UDP_PACKET.endPacket();
+    forwarder->sendPacket(network->TERMINAL_IP,TERMINAL_PORT,"Deneme22");
     delay(1000);
 }

@@ -51,10 +51,11 @@ uint64_t timeRangeReceived;
 uint64_t timeComputedRange;
 // last computed range/time
 // data buffer
-#define LEN_DATA 32
+#define LEN_DATA 33
 #define MAX_DEVICE 10
 byte data[LEN_DATA];
-byte receivedTagEUI[MAX_DEVICE][8];
+byte msgNum;
+uint64_t receivedTagEUI[MAX_DEVICE][2];
 // watchdog and reset period
 uint32_t lastActivity;
 uint32_t resetPeriod = 250;
@@ -118,6 +119,7 @@ void handleReceived() {
 }
 
 void transmitPollAck() {
+    data[33] = msgNum;
     data[0] = POLL_ACK;
     // write EUI to data
     for (int i = 0; i < 8; i++) {
@@ -140,6 +142,7 @@ void transmitBlinkReport() {
 }
 
 void transmitRangeReport(float curRange) {
+    data[33] = msgNum;
     data[0] = RANGE_REPORT;
     // write EUI to data
     for (int i = 0; i < 8; i++) {
@@ -218,9 +221,8 @@ void setup() {
     //
     int i;
     for (i = 0; i < MAX_DEVICE; i++) {
-        int j;
-        for (j = 0; j < 8; j++)
-            receivedTagEUI[i][j] = 0;
+        receivedTagEUI[i][0] = 0;
+        receivedTagEUI[i][1] = 0;
     }
 }
 
@@ -230,8 +232,13 @@ void loop() {
 
     //TCP
     int32_t curMillis = millis();
-
     int i;
+    for (i = 0; i < MAX_DEVICE; i++) {
+        if (curMillis - receivedTagEUI[i][1] > 300) {
+            receivedTagEUI[i][0] = 0;
+            receivedTagEUI[i][1] = 0;
+        }
+    }
     if (!sentAck && !receivedAck) {
         // check if inactive
         if (curMillis - lastActivity > resetPeriod) {
@@ -254,6 +261,7 @@ void loop() {
         //add to array
         // get message and parse
         DW1000Ng::getReceivedData(data, LEN_DATA);
+
         byte msgId = data[0];
 
 
@@ -265,25 +273,25 @@ void loop() {
         if (msgId == BLINK) {
             // on POLL we (re-)start, so no protocol failure
             protocolFailed = false;
-            currentTag = DW1000NgUtils::bytesAsValue(data + 16, 8);
-            expectedMsgId = POLL;
-            for (i = 0; i < receivedTagCount; i++) {
-                if (currentTag == DW1000NgUtils::bytesAsValue(receivedTagEUI[i], 8)) {
-                    break;
+
+
+            for (i = 0; i < MAX_DEVICE; i++) {
+                if (DW1000NgUtils::bytesAsValue(data + 16, 8) == receivedTagEUI[i][0]) {
+                    return;
                 }
             }
+            currentTag = DW1000NgUtils::bytesAsValue(data + 16, 8);
+            receivedTagCount++;
+            if(receivedTagCount >= MAX_DEVICE)
+                receivedTagCount = 0;
+            receivedTagEUI[receivedTagCount][0] = DW1000NgUtils::bytesAsValue(data + 16, 8);
+            receivedTagEUI[receivedTagCount][1] = curMillis;
 
-            if (i == receivedTagCount) {
-                int j;
-                for (j = 0; j < 8; j++)
-                    receivedTagEUI[receivedTagCount][j] = data[16 + j];
-                receivedTagCount++;
-            }
-
-
+            expectedMsgId = POLL;
             transmitBlinkReport();
             noteActivity();
         } else if (msgId == POLL) {
+            msgNum = data[33];
             // on POLL we (re-)start, so no protocol failure
             protocolFailed = false;
             if (currentTag != DW1000NgUtils::bytesAsValue(data + 16, 8) ||
@@ -294,7 +302,6 @@ void loop() {
             expectedMsgId = RANGE;
 
 
-
             timePollReceived = DW1000Ng::getReceiveTimestamp();
             transmitPollAck();
             noteActivity();
@@ -303,8 +310,8 @@ void loop() {
             expectedMsgId = POLL;
 
             if (currentTag != DW1000NgUtils::bytesAsValue(data + 16, 8) ||
-                DW1000NgUtils::bytesAsValue(eui, 8) != DW1000NgUtils::bytesAsValue(data + 24, 8)) {
-
+                DW1000NgUtils::bytesAsValue(eui, 8) != DW1000NgUtils::bytesAsValue(data + 24, 8) ||
+                msgNum != data[33]) {
                 transmitRangeFailed();
                 return;
             }

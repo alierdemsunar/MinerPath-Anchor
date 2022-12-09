@@ -13,7 +13,7 @@ IPAddress Terminal::terminalDNSLookup(const char *DOMAIN, IPAddress IP, bool DEV
     if (DEVELOPMENT_MODE) {
         Serial.println("[?] Trying to find terminal IP via DNS...");
         if (DNS_CLIENT.getHostByName(DOMAIN, IP) == 1) {
-            Serial.print("[!] Terminal IP: ");
+            Serial.print("[!] MinerPath IP: ");
             Serial.print(IP);
             Serial.print(" (");
             Serial.print(DOMAIN);
